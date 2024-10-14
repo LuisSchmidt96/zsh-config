@@ -70,7 +70,14 @@ ZSH_THEME="darkblood"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions sudo web-search copyfile copybuffer dirhistory history jsontools laravel vscode)
+
+if ! dpkg -l | awk '{print $2}' | grep -q '^bat$'; then
+	echo "Installing bat..."
+	sudo apt install bat
+	echo "Installed"
+fi
+	
+plugins=(git zsh-bat zsh-autosuggestions sudo web-search copyfile copybuffer dirhistory history jsontools laravel vscode)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -108,6 +115,7 @@ export PATH="$PATH:/home/acls/development/flutter/bin"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 alias vimmap="/mnt/c/windows/uncap.exe 0x14:0xa2 &" 
+alias whatsmyip="dig +short myip.opendns.com @resolver1.opendns.com"
 
 vimmap
 function copydir {
@@ -117,3 +125,7 @@ function copydir {
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
