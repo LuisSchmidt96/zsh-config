@@ -71,12 +71,36 @@ ZSH_THEME="darkblood"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 
-if ! dpkg -l | awk '{print $2}' | grep -q '^bat$'; then
-	echo "Installing bat..."
-	sudo apt install bat
-	echo "Installed"
-fi
-	
+required_packages=("bat" "xsel")
+
+installed_packages=$(dpkg -l | awk '{print $2}')
+
+choice="n"
+
+for package in "${required_packages[@]}"; do
+	if ! echo $installed_packages | grep -q "^$package$"; then
+		if [[ $choice != "a" ]]; then
+			while true; do
+				echo "Do you want to install $package? [y/n/a]: "
+				read choice
+				choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')  # Convert to lowercase
+				if [[ $choice == "y" || $choice == "a" ]]; then
+					echo "Installing $package..."
+					sudo apt install $package
+					break
+				elif [[ $choice == "n" ]]; then
+					break
+				else
+					echo "Invalid choice. Please try again."
+				fi
+			done
+		else
+			echo "Installing $package..."
+			sudo apt install $package
+		fi
+	fi
+done
+
 plugins=(git zsh-bat zsh-autosuggestions sudo web-search copyfile copybuffer dirhistory history jsontools laravel vscode)
 
 source $ZSH/oh-my-zsh.sh
@@ -114,18 +138,20 @@ export PATH="$PATH:/home/acls/development/flutter/bin"
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-alias vimmap="/mnt/c/windows/uncap.exe 0x14:0xa2 &" 
+alias vimmap="/mnt/c/windows/uncap.exe 0x14:0xa2 &"
 alias whatsmyip="dig +short myip.opendns.com @resolver1.opendns.com"
 
-vimmap
+if ! jobs | awk '{print $(NF-1)}' | grep -q uncap; then
+	vimmap
+fi
+
 function copydir {
-  pwd | tr -d "\n" | xsel --clipboard --input
+	pwd | tr -d "\n" | xsel --clipboard --input
 }
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
