@@ -8,7 +8,38 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="darkblood"
+ENVIRONMENT="unknown"
+
+if [[ -f /etc/os-release ]]; then
+  . /etc/os-release
+  case "$ID:$ID_LIKE" in
+    ubuntu*|*:ubuntu*|debian*|*:debian*)
+      ENVIRONMENT=${ID}
+      pkg_manager="apt"
+      pkg_install_cmd="sudo $pkg_manager install"
+      ;;
+    arch*|*:arch*)
+      ENVIRONMENT="arch"
+      pkg_manager="pacman"
+      pkg_install_cmd="sudo $pkg_manager -S"
+      ;;
+  esac
+fi
+
+if grep -qi "Microsoft" /proc/version; then
+  is_wsl=true
+else
+  is_wsl=false
+fi
+
+case "$ENVIRONMENT" in
+  arch)
+    ZSH_THEME="fox"
+    ;;
+  *)
+    ZSH_THEME="darkblood"
+    ;;
+esac
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -72,7 +103,9 @@ ZSH_THEME="darkblood"
 # Add wisely, as too many plugins slow down shell startup.
 
 required_packages=("bat" "xsel")
-
+if [[ -f $ZSH_CUSTOM/plugins/zsh-bat/bat.zsh ]]; then
+  git clone https://github.com/fdellwing/zsh-bat.git $ZSH_CUSTOM/plugins/zsh-bat
+fi
 installed_packages=$(dpkg -l | awk '{print $2}')
 
 choice="n"
@@ -114,7 +147,7 @@ eval "$(ssh-agent -s)"
 # ssh-add ~/.ssh/id_rsa
 
 # export MANPATH="/usr/local/man:$MANPATH"
-export PATH="$PATH:/home/acls/development/flutter/bin"
+export PATH="$PATH:/home/${USER}/development/flutter/bin"
 
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
@@ -141,8 +174,12 @@ export PATH="$PATH:/home/acls/development/flutter/bin"
 alias vimmap="/mnt/c/windows/uncap.exe 0x14:0xa2 &"
 alias whatsmyip="dig +short myip.opendns.com @resolver1.opendns.com"
 
-if ! jobs | awk '{print $(NF-1)}' | grep -q uncap; then
-	vimmap
+if $is_wsl && ! jobs | awk '{print $(NF-1)}' | grep -q uncap; then
+  if [[ -f /mnt/c/windows/uncap.exe ]]; then
+	  vimmap
+  else
+    echo "Uncap.exe not found, cannot remap capslock to ctrl."
+  fi
 fi
 
 function copydir {
